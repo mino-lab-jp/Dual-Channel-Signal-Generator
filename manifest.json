@@ -1,6 +1,6 @@
 {
-  "name": "Stereo Tone Generator",
-  "short_name": "Stereo Tone",
+  "name": "Dual Channel Signal Generator",
+  "short_name": "Signal Generator",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
