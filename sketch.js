@@ -1,8 +1,13 @@
-// ============================================
-// Stereo Tone Generator
+// ======================================================
+// Dual Channel Signal Generator
 // p5.js + Web Audio API
-// ============================================
+// LEFT / RIGHT independent control
+// ======================================================
 
+
+// ------------------------------
+// Audio
+// ------------------------------
 
 let audioCtx = null;
 
@@ -12,25 +17,28 @@ let oscR = null;
 let gainL = null;
 let gainR = null;
 
-let panL = null;
-let panR = null;
-
+let merger = null;
 let masterGain = null;
 
 
-// 現在の再生モード
-// "stop"
-// "both"
-// "left"
-// "right"
+// 再生状態
+// stop / both / left / right
 
 let playMode = "stop";
 
 
+// ------------------------------
 // DOM
+// ------------------------------
 
-let freqL;
-let freqR;
+let freqInputL;
+let freqInputR;
+
+let freqSliderL;
+let freqSliderR;
+
+let freqDisplayL;
+let freqDisplayR;
 
 let waveL;
 let waveR;
@@ -38,15 +46,15 @@ let waveR;
 let volumeL;
 let volumeR;
 
-let volumeValueL;
-let volumeValueR;
+let volumeDisplayL;
+let volumeDisplayR;
 
 let statusText;
 
 
-// ============================================
+// ======================================================
 // p5 setup
-// ============================================
+// ======================================================
 
 function setup() {
 
@@ -57,9 +65,9 @@ function setup() {
 }
 
 
-// ============================================
+// ======================================================
 // p5 draw
-// ============================================
+// ======================================================
 
 function draw() {
 
@@ -68,30 +76,33 @@ function draw() {
 }
 
 
-// ============================================
-// UI作成
-// ============================================
+// ======================================================
+// UI
+// ======================================================
 
 function buildUI() {
 
-  const app = document.getElementById("app");
+  const app =
+    document.getElementById("app");
 
 
   app.innerHTML = `
 
     <div class="title">
-      Stereo Tone Generator
+      Dual Channel Signal Generator
     </div>
 
     <div class="subtitle">
-      Independent Left / Right Tone Generator
+      Independent Left / Right Audio Output
     </div>
 
 
     <div class="channels">
 
 
-      <!-- LEFT -->
+      <!-- ======================================
+           LEFT
+      ======================================= -->
 
       <div class="channel">
 
@@ -107,13 +118,28 @@ function buildUI() {
           </label>
 
           <input
-            id="freqL"
+            id="freqInputL"
             type="number"
             value="440"
             min="20"
             max="20000"
             step="1"
           >
+
+          <input
+            id="freqSliderL"
+            type="range"
+            min="0"
+            max="1000"
+            value="447"
+            step="1"
+          >
+
+          <div
+            id="freqDisplayL"
+            class="frequencyDisplay">
+            440 Hz
+          </div>
 
         </div>
 
@@ -159,11 +185,12 @@ function buildUI() {
             min="0"
             max="100"
             value="30"
+            step="1"
           >
 
           <div
-            id="volumeValueL"
-            class="value">
+            id="volumeDisplayL"
+            class="volumeDisplay">
             30 %
           </div>
 
@@ -173,7 +200,9 @@ function buildUI() {
 
 
 
-      <!-- RIGHT -->
+      <!-- ======================================
+           RIGHT
+      ======================================= -->
 
       <div class="channel">
 
@@ -189,13 +218,28 @@ function buildUI() {
           </label>
 
           <input
-            id="freqR"
+            id="freqInputR"
             type="number"
             value="440"
             min="20"
             max="20000"
             step="1"
           >
+
+          <input
+            id="freqSliderR"
+            type="range"
+            min="0"
+            max="1000"
+            value="447"
+            step="1"
+          >
+
+          <div
+            id="freqDisplayR"
+            class="frequencyDisplay">
+            440 Hz
+          </div>
 
         </div>
 
@@ -241,11 +285,12 @@ function buildUI() {
             min="0"
             max="100"
             value="30"
+            step="1"
           >
 
           <div
-            id="volumeValueR"
-            class="value">
+            id="volumeDisplayR"
+            class="volumeDisplay">
             30 %
           </div>
 
@@ -253,12 +298,13 @@ function buildUI() {
 
       </div>
 
-
     </div>
 
 
 
-    <!-- Buttons -->
+    <!-- ======================================
+         Buttons
+    ======================================= -->
 
     <div class="buttons">
 
@@ -267,11 +313,11 @@ function buildUI() {
       </button>
 
       <button id="leftButton">
-        Left Only
+        Left
       </button>
 
       <button id="rightButton">
-        Right Only
+        Right
       </button>
 
       <button id="stopButton">
@@ -293,13 +339,30 @@ function buildUI() {
   `;
 
 
+
+  // ==================================================
   // DOM取得
+  // ==================================================
 
-  freqL =
-    document.getElementById("freqL");
+  freqInputL =
+    document.getElementById("freqInputL");
 
-  freqR =
-    document.getElementById("freqR");
+  freqInputR =
+    document.getElementById("freqInputR");
+
+
+  freqSliderL =
+    document.getElementById("freqSliderL");
+
+  freqSliderR =
+    document.getElementById("freqSliderR");
+
+
+  freqDisplayL =
+    document.getElementById("freqDisplayL");
+
+  freqDisplayR =
+    document.getElementById("freqDisplayR");
 
 
   waveL =
@@ -316,11 +379,11 @@ function buildUI() {
     document.getElementById("volumeR");
 
 
-  volumeValueL =
-    document.getElementById("volumeValueL");
+  volumeDisplayL =
+    document.getElementById("volumeDisplayL");
 
-  volumeValueR =
-    document.getElementById("volumeValueR");
+  volumeDisplayR =
+    document.getElementById("volumeDisplayR");
 
 
   statusText =
@@ -328,26 +391,144 @@ function buildUI() {
 
 
 
-  // ==========================================
-  // 周波数
-  // ==========================================
+  // ==================================================
+  // 最初に440Hzに対応する位置へ
+  // ==================================================
 
-  freqL.addEventListener(
+  freqSliderL.value =
+    frequencyToSlider(440);
+
+  freqSliderR.value =
+    frequencyToSlider(440);
+
+
+
+  // ==================================================
+  // LEFT 周波数：数値入力
+  // ==================================================
+
+  freqInputL.addEventListener(
     "input",
-    updateFrequency
+    function () {
+
+      let f =
+        Number(freqInputL.value);
+
+      if (!Number.isFinite(f)) return;
+
+      f =
+        clampFrequency(f);
+
+
+      freqSliderL.value =
+        frequencyToSlider(f);
+
+
+      freqDisplayL.textContent =
+        Math.round(f) + " Hz";
+
+
+      updateFrequency();
+
+    }
   );
 
 
-  freqR.addEventListener(
+
+  // ==================================================
+  // RIGHT 周波数：数値入力
+  // ==================================================
+
+  freqInputR.addEventListener(
     "input",
-    updateFrequency
+    function () {
+
+      let f =
+        Number(freqInputR.value);
+
+      if (!Number.isFinite(f)) return;
+
+
+      f =
+        clampFrequency(f);
+
+
+      freqSliderR.value =
+        frequencyToSlider(f);
+
+
+      freqDisplayR.textContent =
+        Math.round(f) + " Hz";
+
+
+      updateFrequency();
+
+    }
   );
 
 
 
-  // ==========================================
+  // ==================================================
+  // LEFT 周波数：スライダー
+  // ==================================================
+
+  freqSliderL.addEventListener(
+    "input",
+    function () {
+
+      const f =
+        sliderToFrequency(
+          Number(freqSliderL.value)
+        );
+
+
+      freqInputL.value =
+        Math.round(f);
+
+
+      freqDisplayL.textContent =
+        Math.round(f) + " Hz";
+
+
+      updateFrequency();
+
+    }
+  );
+
+
+
+  // ==================================================
+  // RIGHT 周波数：スライダー
+  // ==================================================
+
+  freqSliderR.addEventListener(
+    "input",
+    function () {
+
+      const f =
+        sliderToFrequency(
+          Number(freqSliderR.value)
+        );
+
+
+      freqInputR.value =
+        Math.round(f);
+
+
+      freqDisplayR.textContent =
+        Math.round(f) + " Hz";
+
+
+      updateFrequency();
+
+    }
+  );
+
+
+
+  // ==================================================
   // 波形
-  // ==========================================
+  // ==================================================
 
   waveL.addEventListener(
     "change",
@@ -362,15 +543,15 @@ function buildUI() {
 
 
 
-  // ==========================================
+  // ==================================================
   // 音量
-  // ==========================================
+  // ==================================================
 
   volumeL.addEventListener(
     "input",
     function () {
 
-      volumeValueL.textContent =
+      volumeDisplayL.textContent =
         volumeL.value + " %";
 
       updateVolume();
@@ -383,7 +564,7 @@ function buildUI() {
     "input",
     function () {
 
-      volumeValueR.textContent =
+      volumeDisplayR.textContent =
         volumeR.value + " %";
 
       updateVolume();
@@ -393,9 +574,9 @@ function buildUI() {
 
 
 
-  // ==========================================
+  // ==================================================
   // Buttons
-  // ==========================================
+  // ==================================================
 
   document
     .getElementById("bothButton")
@@ -447,9 +628,10 @@ function buildUI() {
 }
 
 
-// ============================================
-// AudioContextを初期化
-// ============================================
+
+// ======================================================
+// Audio 初期化
+// ======================================================
 
 async function initAudio() {
 
@@ -476,83 +658,27 @@ async function initAudio() {
 
 
 
-  // ==========================================
-  // MASTER
-  // ==========================================
-
-  masterGain =
-    audioCtx.createGain();
-
-  masterGain.gain.value = 0;
-
-  masterGain.connect(
-    audioCtx.destination
-  );
-
-
-
-  // ==========================================
-  // LEFT
-  // ==========================================
+  // ==================================================
+  // Oscillator
+  // ==================================================
 
   oscL =
     audioCtx.createOscillator();
 
-  gainL =
-    audioCtx.createGain();
-
-  panL =
-    audioCtx.createStereoPanner();
-
-
-  panL.pan.value = -1;
-
-
-  oscL
-    .connect(gainL)
-    .connect(panL)
-    .connect(masterGain);
-
-
-
-  // ==========================================
-  // RIGHT
-  // ==========================================
-
   oscR =
     audioCtx.createOscillator();
 
-  gainR =
+
+
+  // ==================================================
+  // Gain
+  // ==================================================
+
+  gainL =
     audioCtx.createGain();
 
-  panR =
-    audioCtx.createStereoPanner();
-
-
-  panR.pan.value = 1;
-
-
-  oscR
-    .connect(gainR)
-    .connect(panR)
-    .connect(masterGain);
-
-
-
-  // 初期設定
-
-  oscL.frequency.value =
-    Number(freqL.value);
-
-  oscR.frequency.value =
-    Number(freqR.value);
-
-
-  oscL.type =
-    waveL.value;
-
-  oscR.type =
-    waveR.value;
+  gainR =
+    audioCtx.createGain();
 
 
   gainL.gain.value = 0;
@@ -561,8 +687,80 @@ async function initAudio() {
 
 
 
-  // Oscillatorは一度だけ開始
-  // 停止時はGainを0にする
+  // ==================================================
+  // Channel Merger
+  //
+  // Input 0 → LEFT
+  // Input 1 → RIGHT
+  // ==================================================
+
+  merger =
+    audioCtx.createChannelMerger(2);
+
+
+  masterGain =
+    audioCtx.createGain();
+
+
+  masterGain.gain.value = 1;
+
+
+
+  // LEFT
+
+  oscL.connect(gainL);
+
+  gainL.connect(
+    merger,
+    0,
+    0
+  );
+
+
+  // RIGHT
+
+  oscR.connect(gainR);
+
+  gainR.connect(
+    merger,
+    0,
+    1
+  );
+
+
+  merger
+    .connect(masterGain)
+    .connect(audioCtx.destination);
+
+
+
+  // ==================================================
+  // 初期周波数
+  // ==================================================
+
+  oscL.frequency.value =
+    Number(freqInputL.value);
+
+
+  oscR.frequency.value =
+    Number(freqInputR.value);
+
+
+
+  // ==================================================
+  // 初期波形
+  // ==================================================
+
+  oscL.type =
+    waveL.value;
+
+
+  oscR.type =
+    waveR.value;
+
+
+
+  // Oscillatorは一度だけstart
 
   oscL.start();
 
@@ -574,9 +772,10 @@ async function initAudio() {
 }
 
 
-// ============================================
+
+// ======================================================
 // 再生
-// ============================================
+// ======================================================
 
 async function startAudio(mode) {
 
@@ -586,24 +785,12 @@ async function startAudio(mode) {
   playMode = mode;
 
 
-  const now =
-    audioCtx.currentTime;
-
-
-  masterGain.gain.cancelScheduledValues(now);
-
-  masterGain.gain.setTargetAtTime(
-    1,
-    now,
-    0.015
-  );
-
-
   updateFrequency();
 
   updateWaveform();
 
   updateVolume();
+
 
 
   if (mode === "both") {
@@ -614,7 +801,7 @@ async function startAudio(mode) {
   }
 
 
-  if (mode === "left") {
+  else if (mode === "left") {
 
     statusText.textContent =
       "PLAYING : LEFT ONLY";
@@ -622,7 +809,7 @@ async function startAudio(mode) {
   }
 
 
-  if (mode === "right") {
+  else if (mode === "right") {
 
     statusText.textContent =
       "PLAYING : RIGHT ONLY";
@@ -632,36 +819,18 @@ async function startAudio(mode) {
 }
 
 
-// ============================================
-// 停止
-// ============================================
+
+// ======================================================
+// STOP
+// ======================================================
 
 function stopAudio() {
 
-  playMode = "stop";
+  playMode =
+    "stop";
 
 
-  if (!audioCtx) {
-
-    statusText.textContent =
-      "STOPPED";
-
-    return;
-
-  }
-
-
-  const now =
-    audioCtx.currentTime;
-
-
-  masterGain.gain.cancelScheduledValues(now);
-
-  masterGain.gain.setTargetAtTime(
-    0,
-    now,
-    0.015
-  );
+  updateVolume();
 
 
   statusText.textContent =
@@ -670,10 +839,11 @@ function stopAudio() {
 }
 
 
-// ============================================
-// 周波数変更
-// 再生中でも即時反映
-// ============================================
+
+// ======================================================
+// 周波数更新
+// 再生中でも即時変更
+// ======================================================
 
 function updateFrequency() {
 
@@ -681,26 +851,34 @@ function updateFrequency() {
 
 
   let fL =
-    Number(freqL.value);
+    Number(freqInputL.value);
+
 
   let fR =
-    Number(freqR.value);
+    Number(freqInputR.value);
+
+
+  if (!Number.isFinite(fL)) return;
+
+  if (!Number.isFinite(fR)) return;
 
 
   fL =
-    constrain(fL, 20, 20000);
+    clampFrequency(fL);
 
   fR =
-    constrain(fR, 20, 20000);
+    clampFrequency(fR);
 
 
   const now =
     audioCtx.currentTime;
 
 
+
   oscL.frequency.cancelScheduledValues(now);
 
   oscR.frequency.cancelScheduledValues(now);
+
 
 
   oscL.frequency.setTargetAtTime(
@@ -719,9 +897,10 @@ function updateFrequency() {
 }
 
 
-// ============================================
+
+// ======================================================
 // 波形変更
-// ============================================
+// ======================================================
 
 function updateWaveform() {
 
@@ -738,10 +917,10 @@ function updateWaveform() {
 }
 
 
-// ============================================
+
+// ======================================================
 // 音量変更
-// 再生中でも即時反映
-// ============================================
+// ======================================================
 
 function updateVolume() {
 
@@ -754,10 +933,6 @@ function updateVolume() {
 
   const rightVolume =
     Number(volumeR.value) / 100;
-
-
-  const now =
-    audioCtx.currentTime;
 
 
   let leftTarget = 0;
@@ -777,7 +952,7 @@ function updateVolume() {
   }
 
 
-  if (playMode === "left") {
+  else if (playMode === "left") {
 
     leftTarget =
       leftVolume;
@@ -788,7 +963,7 @@ function updateVolume() {
   }
 
 
-  if (playMode === "right") {
+  else if (playMode === "right") {
 
     leftTarget =
       0;
@@ -799,13 +974,18 @@ function updateVolume() {
   }
 
 
-  if (playMode === "stop") {
+  else {
 
     leftTarget = 0;
 
     rightTarget = 0;
 
   }
+
+
+
+  const now =
+    audioCtx.currentTime;
 
 
 
@@ -831,9 +1011,93 @@ function updateVolume() {
 }
 
 
-// ============================================
+
+// ======================================================
+// 周波数制限
+// ======================================================
+
+function clampFrequency(f) {
+
+  return Math.min(
+    20000,
+    Math.max(
+      20,
+      f
+    )
+  );
+
+}
+
+
+
+// ======================================================
+// スライダー → 周波数
+//
+// 0 ～ 1000
+//
+// ↓ 対数変換
+//
+// 20 Hz ～ 20000 Hz
+// ======================================================
+
+function sliderToFrequency(value) {
+
+  const minF = 20;
+
+  const maxF = 20000;
+
+
+  const t =
+    value / 1000;
+
+
+  return (
+    minF *
+    Math.pow(
+      maxF / minF,
+      t
+    )
+  );
+
+}
+
+
+
+// ======================================================
+// 周波数 → スライダー
+// ======================================================
+
+function frequencyToSlider(frequency) {
+
+  const minF = 20;
+
+  const maxF = 20000;
+
+
+  frequency =
+    clampFrequency(frequency);
+
+
+  const t =
+    Math.log(
+      frequency / minF
+    ) /
+    Math.log(
+      maxF / minF
+    );
+
+
+  return Math.round(
+    t * 1000
+  );
+
+}
+
+
+
+// ======================================================
 // 画面サイズ変更
-// ============================================
+// ======================================================
 
 function windowResized() {
 
