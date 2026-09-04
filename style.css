@@ -1,3 +1,7 @@
+/* =========================================
+   基本設定
+========================================= */
+
 * {
   box-sizing: border-box;
 }
@@ -10,8 +14,6 @@ body {
   width: 100%;
   min-height: 100%;
 
-  overflow-x: hidden;
-
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -19,12 +21,12 @@ body {
     sans-serif;
 
   background: #f5f5f5;
-
-  overscroll-behavior: none;
 }
 
 
-/* p5.js canvas */
+/* =========================================
+   p5.js Canvas
+========================================= */
 
 canvas {
   position: fixed;
@@ -43,268 +45,332 @@ canvas {
 }
 
 
-/* アプリ本体 */
+/* =========================================
+   アプリ領域
+========================================= */
 
 #app {
   position: relative;
 
   z-index: 10;
 
-  width: 100%;
+  width: 85vw;
 
-  min-height: 100dvh;
+  max-width: 850px;
 
-  padding:
-    max(14px, env(safe-area-inset-top))
-    14px
-    max(18px, env(safe-area-inset-bottom))
-    14px;
+  margin: 0 auto;
+
+  padding-top:
+    max(8px, env(safe-area-inset-top));
+
+  padding-bottom:
+    max(10px, env(safe-area-inset-bottom));
 }
 
 
-/* タイトル */
+/* =========================================
+   タイトル
+========================================= */
 
 .title {
   text-align: center;
 
-  font-size: clamp(24px, 7vw, 36px);
+  font-size: clamp(20px, 5vw, 32px);
 
   font-weight: 700;
 
-  margin-top: 4px;
-  margin-bottom: 6px;
+  margin: 4px 0 2px 0;
 }
-
 
 .subtitle {
   text-align: center;
 
-  font-size: clamp(13px, 3.5vw, 17px);
+  font-size: clamp(11px, 2.8vw, 15px);
 
   color: #555;
 
-  margin-bottom: 18px;
+  margin-bottom: 8px;
 }
 
 
-/* 左右チャンネル */
+/* =========================================
+   LEFT / RIGHT
+========================================= */
 
 .channels {
   display: grid;
 
   grid-template-columns: 1fr 1fr;
 
-  gap: 14px;
+  gap: 8px;
 
   width: 100%;
-  max-width: 900px;
-
-  margin: 0 auto;
 }
 
 
 .channel {
-  background: rgba(255, 255, 255, 0.94);
+  min-width: 0;
 
-  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
 
-  padding: 15px;
+  border-radius: 12px;
+
+  padding: 10px;
 
   box-shadow:
-    0 2px 10px rgba(0, 0, 0, 0.08);
+    0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 
 .channelTitle {
   text-align: center;
 
-  font-size: clamp(20px, 5vw, 28px);
+  font-size: clamp(16px, 4vw, 22px);
 
   font-weight: 700;
 
-  margin-bottom: 14px;
+  margin-bottom: 8px;
 }
 
 
-/* 項目 */
+/* =========================================
+   コントロール
+========================================= */
 
 .control {
-  margin-bottom: 16px;
+  margin-bottom: 9px;
 }
 
 
 .control label {
   display: block;
 
-  font-size: clamp(14px, 3.7vw, 18px);
+  font-size: clamp(11px, 2.8vw, 15px);
 
   font-weight: 600;
 
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 
-/* 数値入力 */
+/* =========================================
+   周波数数値入力
+========================================= */
 
 input[type="number"] {
   width: 100%;
 
-  min-height: 44px;
+  min-width: 0;
 
-  padding: 8px 10px;
+  height: 36px;
 
-  font-size: 18px;
+  padding: 4px 6px;
+
+  font-size: 16px;
+
+  text-align: center;
 
   border: 1px solid #aaa;
 
-  border-radius: 8px;
+  border-radius: 7px;
 
   background: white;
 }
 
 
-/* セレクト */
-
-select {
-  width: 100%;
-
-  min-height: 44px;
-
-  padding: 7px 9px;
-
-  font-size: 17px;
-
-  border: 1px solid #aaa;
-
-  border-radius: 8px;
-
-  background: white;
-}
-
-
-/* スライダー */
+/* =========================================
+   スライダー
+========================================= */
 
 input[type="range"] {
   width: 100%;
 
-  min-height: 35px;
+  margin: 4px 0 0 0;
+
+  min-width: 0;
 }
 
 
-.value {
+.frequencyDisplay,
+.volumeDisplay {
   text-align: center;
 
-  font-size: 16px;
+  font-size: clamp(11px, 2.8vw, 14px);
 
-  margin-top: 3px;
+  margin-top: 1px;
 }
 
 
-/* 再生ボタン */
+/* =========================================
+   波形選択
+========================================= */
+
+select {
+  width: 100%;
+
+  min-width: 0;
+
+  height: 36px;
+
+  padding: 3px;
+
+  font-size: clamp(12px, 3vw, 15px);
+
+  border: 1px solid #aaa;
+
+  border-radius: 7px;
+
+  background: white;
+}
+
+
+/* =========================================
+   ボタン
+========================================= */
 
 .buttons {
   display: grid;
 
   grid-template-columns: repeat(4, 1fr);
 
-  gap: 10px;
+  gap: 6px;
 
   width: 100%;
-  max-width: 900px;
 
-  margin: 18px auto 0 auto;
+  margin-top: 9px;
 }
 
 
 button {
-  min-height: 50px;
+  min-width: 0;
 
-  padding: 8px;
+  min-height: 42px;
+
+  padding: 4px 2px;
 
   border: 0;
 
-  border-radius: 10px;
+  border-radius: 8px;
 
-  font-size: clamp(14px, 3.5vw, 18px);
+  font-size: clamp(11px, 2.8vw, 15px);
 
   font-weight: 600;
 
-  cursor: pointer;
-
   background: #dedede;
+
+  cursor: pointer;
 }
 
 
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
 
-/* 状態表示 */
+/* =========================================
+   状態表示
+========================================= */
 
 .status {
   width: 100%;
-  max-width: 900px;
 
-  margin: 14px auto;
+  margin-top: 7px;
 
-  padding: 10px;
+  padding: 6px;
 
   text-align: center;
 
-  font-size: clamp(14px, 3.6vw, 18px);
+  font-size: clamp(11px, 2.8vw, 15px);
 
-  background: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.9);
 
-  border-radius: 9px;
+  border-radius: 7px;
 }
 
 
-/* スマホ縦画面 */
+/* =========================================
+   スマホ縦画面
+========================================= */
 
-@media (max-width: 650px) {
-
-  .channels {
-    grid-template-columns: 1fr;
-  }
-
-
-  .buttons {
-    grid-template-columns: 1fr 1fr;
-  }
-
+@media (max-width: 500px) {
 
   #app {
-    padding-left: 10px;
-    padding-right: 10px;
-  }
-
-}
-
-
-/* 横画面で高さが小さい場合 */
-
-@media (orientation: landscape) and (max-height: 550px) {
-
-  .title {
-    font-size: 22px;
-    margin: 2px;
-  }
-
-  .subtitle {
-    margin-bottom: 8px;
+    width: 85vw;
   }
 
   .channel {
-    padding: 10px;
+    padding: 7px;
   }
 
   .control {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+  }
+
+  input[type="number"] {
+    height: 33px;
+    font-size: 15px;
+  }
+
+  select {
+    height: 33px;
+  }
+
+  button {
+    min-height: 39px;
+  }
+
+}
+
+
+/* =========================================
+   横画面
+========================================= */
+
+@media (orientation: landscape) and (max-height: 550px) {
+
+  #app {
+    width: 85vw;
+  }
+
+  .title {
+    font-size: 19px;
+    margin: 1px;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .channel {
+    padding: 5px 8px;
+  }
+
+  .channelTitle {
+    font-size: 15px;
+    margin-bottom: 3px;
+  }
+
+  .control {
+    margin-bottom: 3px;
+  }
+
+  input[type="number"],
+  select {
+    height: 29px;
   }
 
   .buttons {
-    margin-top: 10px;
+    margin-top: 4px;
+  }
+
+  button {
+    min-height: 32px;
+  }
+
+  .status {
+    margin-top: 3px;
+    padding: 3px;
   }
 
 }
